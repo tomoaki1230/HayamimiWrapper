@@ -1,0 +1,580 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; media-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HayamimiWrapper</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="app">
+  <nav class="sidebar">
+    <button class="nav-item" data-page="setup"><svg class="nav-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v11"/><path d="m7.5 9.5 4.5 4.5 4.5-4.5"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg><span class="nav-label">セットアップ</span><span class="nav-badge" id="nav-setup-badge" hidden>!</span></button>
+    <button class="nav-item" data-page="live"><svg class="nav-ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0"/><path d="M12 17.5V21"/></svg><span class="nav-label">リアルタイム</span><span class="nav-live" id="nav-live-live" hidden title="文字起こし中">●</span></button>
+    <button class="nav-item" data-page="file"><svg class="nav-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h4"/></svg><span class="nav-label">ファイルから</span><span class="nav-live" id="nav-live-file" hidden title="文字起こし中">●</span></button>
+    <button class="nav-item" data-page="settings"><svg class="nav-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg><span class="nav-label">設定</span></button>
+    <button class="nav-item" data-page="profile"><svg class="nav-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10v4M8 6v12M12 9v6M16 4v16M20 10v4"/></svg><span class="nav-label">認識プロファイル</span></button>
+    <button class="nav-item" data-page="network"><svg class="nav-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18z"/></svg><span class="nav-label">ネットワーク</span></button>
+    <button class="nav-item" data-page="guide"><svg class="nav-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5.5A1.5 1.5 0 0 1 4.5 4H9a3 3 0 0 1 3 3v13a2.5 2.5 0 0 0-2.5-2.5H4.5A1.5 1.5 0 0 1 3 16z"/><path d="M21 5.5A1.5 1.5 0 0 0 19.5 4H15a3 3 0 0 0-3 3v13a2.5 2.5 0 0 1 2.5-2.5h5A1.5 1.5 0 0 0 21 16z"/></svg><span class="nav-label">使い方</span></button>
+    <button class="nav-item" data-page="log"><svg class="nav-ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="m7 9 3 3-3 3"/><path d="M13 15h4"/></svg><span class="nav-label">ログ</span></button>
+    <button class="nav-item" data-page="license"><svg class="nav-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 5 6v5c0 4.5 3 8 7 10 4-2 7-5.5 7-10V6z"/><path d="m9 12 2 2 4-4"/></svg><span class="nav-label">ライセンス</span></button>
+    <button class="nav-item" data-page="thanks"><svg class="nav-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="9" r="5.5"/><path d="M8.5 13.5 7 21l5-2.5 5 2.5-1.5-7.5"/></svg><span class="nav-label">謝辞</span></button>
+    <div class="sidebar-foot">
+      <div class="engine-state" id="engine-state"><span class="dot"></span><span class="label">停止中</span></div>
+      <div class="version" id="app-version"></div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <!-- ① セットアップ -->
+    <section class="page" id="page-setup">
+      <header class="page-head">
+        <h1>セットアップ</h1>
+        <p class="lead">ボタンひとつで hayamimi を導入します。Python などを事前にインストールする必要はありません。</p>
+      </header>
+
+      <div class="card ready-card" id="setup-ready" hidden>
+        <div class="ready-icon">✓</div>
+        <div class="ready-body">
+          <h2>準備ができています</h2>
+          <p id="setup-ready-detail"></p>
+        </div>
+      </div>
+
+      <div class="card" id="setup-options">
+        <h2>1. 使うモデルを選ぶ</h2>
+        <div class="choice-grid">
+          <label class="choice">
+            <input type="radio" name="modelSet" value="minimal" checked>
+            <div>
+              <div class="choice-title">標準（おすすめ）</div>
+              <div class="choice-desc">日本語・英語の文字起こし。ダウンロード約 1.1GB。</div>
+            </div>
+          </label>
+          <label class="choice">
+            <input type="radio" name="modelSet" value="full">
+            <div>
+              <div class="choice-title">フル機能</div>
+              <div class="choice-desc">多言語（中・韓・広東語など）、話者の区別、英訳に対応。約 3.1GB。</div>
+            </div>
+          </label>
+        </div>
+
+        <h2>2. 保存場所</h2>
+        <div class="path-row">
+          <code id="setup-root"></code>
+          <button class="btn" id="btn-choose-root">変更…</button>
+          <button class="btn ghost" id="btn-reset-root">既定に戻す</button>
+          <button class="btn ghost" id="btn-open-root">開く</button>
+        </div>
+        <p class="hint">空き容量が 2〜5GB ほど必要です。インターネット接続が必要です（初回のみ）。
+          会社のネットワークなどでプロキシが必要な場合は、先に<button class="link-btn" data-goto="network">「ネットワーク」画面</button>でプロキシを設定してください。</p>
+        <p class="hint" id="setup-platform-note" hidden></p>
+        <p class="hint warn-text" id="setup-root-warning" hidden>保存場所のパスに日本語などの文字が含まれています。音声認識エンジンがモデルを読み込めない場合があるため、半角英数字だけのフォルダ（例: C:\HayamimiWrapper）を選ぶことをおすすめします。</p>
+
+        <div class="setup-actions">
+          <button class="btn primary large" id="btn-install">セットアップを開始</button>
+          <button class="btn danger" id="btn-cancel-install" hidden>中止</button>
+        </div>
+        <p class="hint" id="install-hint" hidden></p>
+      </div>
+
+      <div class="card" id="setup-progress-card">
+        <h2>進み具合</h2>
+        <div class="progress"><div class="bar" id="setup-overall"></div></div>
+        <ol class="steps" id="setup-steps"></ol>
+        <div class="undo-all-row">
+          <span class="hint" id="undo-all-hint">各手順の「元に戻す」で、その手順で導入したものを削除できます。</span>
+          <button class="btn danger small" id="btn-undo-all">すべて削除…</button>
+        </div>
+        <details class="log-details">
+          <summary>詳細ログ</summary>
+          <pre class="log" id="setup-log"></pre>
+        </details>
+      </div>
+    </section>
+
+    <!-- ② リアルタイム -->
+    <section class="page" id="page-live">
+      <header class="page-head">
+        <h1>リアルタイム文字起こし</h1>
+        <p class="lead">マイクや PC の音声をその場で文字にします。</p>
+      </header>
+
+      <div class="card controls">
+        <div class="opt-head">
+          <span class="opt-summary" id="live-opt-summary" hidden></span>
+          <button class="btn small ghost opt-toggle" data-opt-target="live-opt" type="button">設定を隠す ▲</button>
+        </div>
+        <div class="opt-area" id="live-opt">
+        <div class="input-row">
+          <div class="field input-src">
+            <label class="switch"><input type="checkbox" class="input-ctl" data-run="micOn"><span class="slider"></span> マイク</label>
+            <div class="inline">
+              <select id="live-mic" class="input-ctl" data-run="micDevice"><option value="">既定のマイク</option></select>
+              <button class="btn icon input-ctl" id="btn-refresh-devices" title="デバイス一覧を更新">↻</button>
+            </div>
+          </div>
+          <div class="field input-src" id="field-loopback">
+            <label class="switch"><input type="checkbox" class="input-ctl" data-run="loopbackOn" id="live-loopback"><span class="slider"></span> PC の音（スピーカーループバック）</label>
+            <select id="live-speaker" class="input-ctl" data-run="speakerDevice"><option value="">既定のスピーカー</option></select>
+          </div>
+          <p class="mix-note" id="mix-note" hidden>マイクと PC の音を両方 ON にするときは、<b>ヘッドホン</b>の使用をおすすめします。スピーカーから音を出すと、マイクがその音も拾って同じ発言が二重に文字起こしされることがあります（アプリは音を再生しないため、ハウリングの原因にはなりません）。</p>
+        </div>
+        <div class="field">
+          <label for="live-profile">会話の種類</label>
+          <select id="live-profile" data-run="profile" class="profile-select"></select>
+        </div>
+        <div class="field">
+          <label for="live-lang">言語</label>
+          <select id="live-lang" data-run="langMode">
+            <option value="auto">自動判定</option>
+            <option value="ja">日本語のみ</option>
+            <option value="en">英語のみ</option>
+          </select>
+        </div>
+        <div class="field checks">
+          <label class="check"><input type="checkbox" data-run="speakers"> 話者を区別</label>
+            <select class="speaker-count" data-run="speakerCount" title="話者の人数が分かっていれば選んでください。途中で人が増えたら、文字起こし中でも変更できます">
+              <option value="auto">人数: 自動</option><option value="1">1 人</option><option value="2">2 人</option>
+              <option value="3">3 人</option><option value="4">4 人</option><option value="many">5 人以上</option>
+            </select>
+          <label class="check"><input type="checkbox" data-run-translate> 英語に翻訳</label>
+          <span class="full-only-note" hidden>※ 話者の区別・翻訳は「フル機能」モデルで使えます</span>
+        </div>
+        </div>
+        <div class="field start live-buttons">
+          <div class="elapsed" id="live-elapsed" title="「● 開始」を押してからの経過時間（停止すると止まり、次の開始で 0 に戻ります）">
+            <span class="elapsed-label">経過</span><span class="elapsed-time" id="live-elapsed-time">0:00:00</span>
+          </div>
+          <button class="btn large" id="btn-load">モデルを読み込む</button>
+          <button class="btn primary large start-btn" id="btn-live" disabled>● 開始</button>
+        </div>
+        <p class="live-hint" id="live-hint"></p>
+        <div class="reload-banner" id="reload-banner" hidden>
+          <span id="reload-text"></span>
+          <button class="btn small primary" id="btn-reload">今すぐ再読み込み</button>
+        </div>
+        <div class="meter-row">
+          <span class="meter-label">入力レベル</span>
+          <div class="meter" id="level-meter" title="取り込み中の音声の大きさ"><div class="meter-bar" id="level-bar"></div><div class="meter-peak" id="level-peak"></div></div>
+          <span class="meter-db" id="level-db">—</span>
+        </div>
+      </div>
+
+      <div id="lag-host"></div>
+      <div class="transcript-host" id="live-transcript"></div>
+    </section>
+
+    <!-- ③ ファイル -->
+    <section class="page" id="page-file">
+      <header class="page-head">
+        <h1>ファイルから文字起こし</h1>
+        <p class="lead">録音や動画ファイル（mp3 / m4a / wav / mp4 など）を文字にします。</p>
+      </header>
+
+      <div class="card">
+        <div class="dropzone" id="dropzone" tabindex="0">
+          <div class="drop-ico">⬇</div>
+          <div class="drop-text">ここにファイルをドラッグ＆ドロップ</div>
+          <div class="drop-sub">または <button class="link-btn" id="btn-choose-file">ファイルを選択</button></div>
+          <div class="drop-file" id="file-name"></div>
+        </div>
+        <div class="controls compact">
+          <div class="field">
+            <label for="file-profile">会話の種類</label>
+            <select id="file-profile" data-run="profile" class="profile-select"></select>
+          </div>
+          <div class="field">
+            <label for="file-lang">言語</label>
+            <select id="file-lang" data-run="langMode">
+              <option value="auto">自動判定</option>
+              <option value="ja">日本語のみ</option>
+              <option value="en">英語のみ</option>
+            </select>
+          </div>
+          <div class="field checks">
+            <label class="check"><input type="checkbox" data-run="speakers"> 話者を区別</label>
+            <select class="speaker-count" data-run="speakerCount" title="話者の人数が分かっていれば選んでください。途中で人が増えたら、文字起こし中でも変更できます">
+              <option value="auto">人数: 自動</option><option value="1">1 人</option><option value="2">2 人</option>
+              <option value="3">3 人</option><option value="4">4 人</option><option value="many">5 人以上</option>
+            </select>
+            <label class="check"><input type="checkbox" data-run-translate> 英語に翻訳</label>
+            <span class="full-only-note" hidden>※ フル機能モデルで使えます</span>
+          </div>
+          <div class="field start">
+            <button class="btn primary large start-btn" id="btn-file" disabled>文字起こし開始</button>
+          </div>
+        </div>
+        <div class="file-progress" id="file-progress" hidden>
+          <div class="progress"><div class="bar" id="file-bar"></div></div>
+          <div class="file-status" id="file-status"></div>
+        </div>
+      </div>
+
+      <div class="transcript-host" id="file-transcript"></div>
+    </section>
+
+    <!-- ④ 設定 -->
+    <section class="page" id="page-settings">
+      <header class="page-head">
+        <h1>設定</h1>
+        <p class="lead">変更は自動で保存され、次回の文字起こし開始時に反映されます。</p>
+      </header>
+
+      <div class="card">
+        <h2>自動保存</h2>
+        <p class="hint">フォルダを指定すると、清書された文字起こしを 1 回ごとにテキストファイルで自動保存します。</p>
+        <div class="path-row">
+          <code id="autosave-dir">（自動保存しない）</code>
+          <button class="btn" id="btn-autosave-choose">フォルダを選択…</button>
+          <button class="btn ghost" id="btn-autosave-clear">解除</button>
+          <button class="btn ghost" id="btn-autosave-open">開く</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>置換辞書</h2>
+        <p class="hint">よく間違える言葉を直します。<code>間違い=正しい</code> の形で 1 行に 1 つ書きます（例: <code>はやみみ=hayamimi</code>）。</p>
+        <textarea id="replace-text" rows="6" spellcheck="false" placeholder="例:&#10;汽車=記者&#10;はやみみ=hayamimi"></textarea>
+      </div>
+
+      <div class="card">
+        <h2>動作</h2>
+        <div class="stack">
+          <div class="field">
+            <label for="opt-threads">使用スレッド数</label>
+            <input type="number" id="opt-threads" data-run="threads" min="1" max="32" step="1">
+            <span class="hint">多いほど速くなりますが CPU 負荷が上がります（既定 4）。精度には影響しません。</span>
+          </div>
+          <div class="field checks vertical">
+            <label class="check"><input type="checkbox" data-run="partial"> 聞き取り途中の文字を表示</label>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 認識プロファイル -->
+    <section class="page" id="page-profile">
+      <header class="page-head">
+        <h1>認識プロファイル</h1>
+        <p class="lead">会話の種類ごとの認識の設定です。各値の意味を確認したり、「カスタム」で自由に調整したりできます。</p>
+      </header>
+
+      <div class="card" id="profile-card">
+        <h2>会話の種類</h2>
+        <p class="hint">録音する場面に合わせて選ぶと、認識の設定がまとめて切り替わります。リアルタイム画面・ファイル画面でも選べます。
+          「カスタム」を選ぶと、各値を自由に変更できます。モデルを読み込んだ後でも、ほとんどの値はすぐに反映されます
+          （探索の幅・無音判定の補正は、次の発言の認識時に日本語モデルを作り直します）。「清書」だけは再読み込みが必要です。</p>
+        <div class="profile-head">
+          <select id="opt-profile" data-run="profile" class="profile-select"></select>
+          <span class="hint" id="profile-desc"></span>
+        </div>
+        <table class="profile-table" id="profile-table"></table>
+        <div class="profile-actions" id="profile-actions" hidden>
+          <label for="profile-copy-from">別のプロファイルの値を読み込む:</label>
+          <select id="profile-copy-from"></select>
+          <button class="btn small" id="btn-profile-copy">読み込む</button>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ネットワーク -->
+    <section class="page" id="page-network">
+      <header class="page-head">
+        <h1>ネットワーク</h1>
+        <p class="lead">インターネット接続の設定です。セットアップ時のダウンロードに使われます（文字起こし自体はオフラインで動きます）。</p>
+      </header>
+
+      <div class="card" id="proxy-card">
+        <h2>プロキシ</h2>
+        <p class="hint">会社のネットワークなどでプロキシが必要な場合に設定します。セットアップ時のダウンロード（hayamimi・Python・ライブラリ・モデル）に使われます。</p>
+        <div class="proxy-modes">
+          <label class="check"><input type="radio" name="proxyMode" value="system"> OS（Windows）のプロキシ設定を使う（おすすめ）</label>
+          <label class="check"><input type="radio" name="proxyMode" value="manual"> 手動で指定する</label>
+          <label class="check"><input type="radio" name="proxyMode" value="none"> プロキシを使わない</label>
+        </div>
+        <div class="grid-2 proxy-fields">
+          <div class="field" data-proxy-manual>
+            <label for="proxy-url">プロキシのアドレス</label>
+            <input type="text" id="proxy-url" placeholder="例: http://proxy.example.co.jp:8080" spellcheck="false">
+          </div>
+          <div class="field" data-proxy-manual>
+            <label for="proxy-bypass">プロキシを使わない宛先（任意・カンマ区切り）</label>
+            <input type="text" id="proxy-bypass" placeholder="例: .example.co.jp,192.168.0.10" spellcheck="false">
+          </div>
+          <div class="field">
+            <label for="proxy-user">ユーザー名（認証が必要な場合）</label>
+            <input type="text" id="proxy-user" autocomplete="off" spellcheck="false">
+          </div>
+          <div class="field">
+            <label for="proxy-pass">パスワード</label>
+            <input type="password" id="proxy-pass" autocomplete="new-password">
+            <span class="hint" id="proxy-pass-hint"></span>
+          </div>
+        </div>
+        <div class="setup-actions">
+          <button class="btn primary" id="btn-proxy-save">保存</button>
+          <button class="btn" id="btn-proxy-test">接続テスト</button>
+          <button class="btn ghost" id="btn-proxy-clearpass" hidden>保存済みパスワードを削除</button>
+        </div>
+        <div class="proxy-result" id="proxy-result" hidden></div>
+      </div>
+
+    </section>
+
+    <!-- ⑤ 使い方 -->
+    <section class="page" id="page-guide">
+      <article class="card guide guide-v2">
+        <h1>使い方</h1>
+        <p class="guide-lead">音声は PC の中だけで処理され、インターネットには送られません。GPU も不要です。</p>
+
+        <h2>はじめる 3 ステップ</h2>
+        <ol class="guide-steps">
+          <li class="guide-step">
+            <span class="guide-step-no">1</span>
+            <div class="guide-step-body">
+              <div class="guide-step-title">セットアップ</div>
+              <p>モデルを選んで「セットアップを開始」。10〜30 分ほどで自動で終わります（初回のみ）。</p>
+              <button class="btn small ghost" data-goto="setup">セットアップへ</button>
+            </div>
+          </li>
+          <li class="guide-step">
+            <span class="guide-step-no">2</span>
+            <div class="guide-step-body">
+              <div class="guide-step-title">モデルを読み込む</div>
+              <p>「リアルタイム」画面で<b>マイク</b>・<b>PC の音</b>を選び、「モデルを読み込む」。</p>
+              <button class="btn small ghost" data-goto="live">リアルタイムへ</button>
+            </div>
+          </li>
+          <li class="guide-step">
+            <span class="guide-step-no">3</span>
+            <div class="guide-step-body">
+              <div class="guide-step-title">● 開始</div>
+              <p>すぐに文字起こしが始まります。「■ 停止」で止めても、モデルは読み込んだままです。</p>
+            </div>
+          </li>
+        </ol>
+
+        <h2>結果の見かた</h2>
+        <div class="flow" role="list">
+          <div class="flow-item" role="listitem"><div class="flow-name">話す</div></div>
+          <div class="flow-arrow" aria-hidden="true">→</div>
+          <div class="flow-item" role="listitem"><div class="flow-name">聞き取り途中</div><div class="flow-when">話している間</div><div class="flow-desc">速報の欄の末尾に仮の行</div></div>
+          <div class="flow-arrow" aria-hidden="true">→</div>
+          <div class="flow-item" role="listitem"><div class="flow-name">速報</div><div class="flow-when">話し終えてすぐ</div><div class="flow-desc">一区切りごとの一次結果</div></div>
+          <div class="flow-arrow" aria-hidden="true">→</div>
+          <div class="flow-item flow-best" role="listitem"><div class="flow-name">清書（高精度）</div><div class="flow-when">数秒後</div><div class="flow-desc">前後をまとめて認識し直した結果。保存はこちらがおすすめ</div></div>
+        </div>
+        <p class="hint">清書が届いた速報は、速報の欄から消えて清書の欄に移ります。速報は一区切り（息継ぎなどの短い無音）ごとに出るため、続けて長く話している間は、速報の欄の末尾に「聞き取り中」の仮の行が出て、話し終えると速報に置き換わります。</p>
+
+        <h2>よく使う操作</h2>
+        <div class="tiles">
+          <div class="tile"><div class="tile-title">入力の切り替え</div><p>マイク・PC の音（Windows）は文字起こし中でも ON/OFF できます。両方 ON で混ぜて認識します。</p></div>
+          <div class="tile"><div class="tile-title">会話の種類・言語</div><p>場面に合わせて選ぶと認識の設定がまとめて変わります。読み込んだままでも変更できます。</p></div>
+          <div class="tile"><div class="tile-title">話者の区別</div><p>S1・S2… のラベルと色で話者を分けます。人数を選ぶと精度が上がります（フル機能のみ）。</p></div>
+          <div class="tile"><div class="tile-title">コピー・保存</div><p>表示中のタブの内容を .txt / .md で保存できます。「時刻」で時刻の有無を切り替えます。</p></div>
+          <div class="tile"><div class="tile-title">自動保存・置換辞書</div><p>「設定」画面で、保存先フォルダと <code>間違い=正しい</code> 形式の置き換えを登録できます。</p></div>
+          <div class="tile"><div class="tile-title">モデルの切り替え</div><p>「セットアップ」画面でモデルを選び直し、「フル機能のモデルを追加する」（または「標準のモデルに切り替える」）を押します。</p></div>
+          <div class="tile"><div class="tile-title">ファイルから</div><p>mp3・m4a・wav・mp4 などをドラッグ＆ドロップして「文字起こし開始」。</p></div>
+        </div>
+
+        <h2>会話の種類</h2>
+        <table class="compact">
+          <tr><th>種類</th><th>向いている場面</th></tr>
+          <tr><td>標準</td><td>迷ったらこれ。ほとんどの場面で安定します</td></tr>
+          <tr><td>朗読・原稿読み上げ</td><td>原稿を読む場面。短めに区切って認識します</td></tr>
+          <tr><td>雑談・テンポの速い会話</td><td>前後をまとめて認識します（速報は少し遅れます）</td></tr>
+          <tr><td>講演・会議・インタビュー</td><td>検証の結果、標準と同じ設定です</td></tr>
+          <tr><td>カスタム</td><td>「認識プロファイル」画面で値を自由に変更します</td></tr>
+        </table>
+
+        <h2>困ったとき</h2>
+        <div class="faq">
+          <details><summary>セットアップが失敗する</summary>
+            <p>インターネット接続と空き容量を確認し、もう一度「セットアップを開始」を押してください。完了済みの手順は飛ばされます。
+              会社のネットワークでは「ネットワーク」画面でプロキシを設定し、「接続テスト」で確認してください。</p></details>
+          <details><summary>マイクの声が認識されない（入力レベルが動かない）</summary>
+            <p>マイク一覧の <b>↻</b> で正しいマイクを選んでください。Windows の「設定」→「プライバシーとセキュリティ」→「マイク」で、
+              <b>マイクへのアクセス</b>と<b>デスクトップ アプリがマイクにアクセスできるようにする</b>を ON にしてください。</p></details>
+          <details><summary>モデルの読み込みでエラーになる</summary>
+            <p>保存場所のパスに日本語などが含まれていると読み込めない場合があります。「セットアップ」画面の「変更…」で、
+              半角英数字だけのフォルダ（例: C:\HayamimiWrapper）を選んで、セットアップをやり直してください。</p></details>
+          <details><summary>「停止しています…」のまま終わらない</summary>
+            <p>通常は数秒で待機に戻ります。10 秒以上かかると案内が出て「モデルを解放」を押せるようになるので、押して終了してください。</p></details>
+          <details><summary>ログに「処理が ○ 秒止まりました」と出る・速報や清書が遅れる</summary>
+            <p>音声認識エンジンは認識を 1 本の流れで順に行うため、長い発言を認識している間は次の音声に進めません（CPU に空きがあっても起こります）。
+              止まっている間の音声はためておき、あとで追いつくので、たまに出る程度なら問題ありません。
+              「清書の遅れ」欄の清書待ちが増え続ける場合は、「話者の区別」を OFF にするか、「設定」でスレッド数を増やしてください。</p></details>
+          <details><summary>聞き取り中に出ていた言葉が、速報で抜ける</summary>
+            <p>会話で間を空けずに続けて話すと、複数の文がひとまとまりになり、前半が速報から抜けることがあります（音声認識エンジンの性質）。
+              アプリが自動で検出して認識し直します（「ログ」画面に「速報の前半が抜けていたため…認識し直しました」と出ます）。
+              それでも抜ける場合は、清書（高精度）の欄も確認してください。</p></details>
+          <details><summary>声の小さい人の発言が抜ける</summary>
+            <p>「認識プロファイル」画面で「発話検出のリセット」が 0 になっていないか確認してください。
+              それでも抜ける場合は、カスタムで「発話検出のしきい値」を 0.3〜0.4 に下げてください（雑音を拾いやすくなります）。</p></details>
+          <details><summary>ログに「PC の音の取り込みに一瞬の途切れがありました」と出る</summary>
+            <p>動画や会議の音声の再生開始・停止の直後に出るもので、通常は問題ありません。</p></details>
+          <details><summary>初回起動で「Windows によって PC が保護されました」と出る</summary>
+            <p>「詳細情報」→「実行」を押してください。</p></details>
+        </div>
+        <p class="hint">詳しいエラー内容は「ログ」画面で確認できます。ライセンスは「ライセンス」画面を参照してください。</p>
+      </article>
+    </section>
+
+    <!-- ライセンス -->
+    <section class="page" id="page-license">
+      <article class="card guide">
+        <h1>ライセンス</h1>
+        <p>HayamimiWrapper と、HayamimiWrapper が使う・ダウンロードするソフトウェアとモデルのライセンスです。
+          各ライセンスの全文は、リンク先の配布元で確認できます。</p>
+
+        <h2>HayamimiWrapper（このアプリ）</h2>
+        <p><b>MIT License</b> — Copyright (c) 2026 tomoaki bessho</p>
+        <pre class="license-text">Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.</pre>
+
+        <h2>hayamimi（音声認識エンジン）</h2>
+        <p><b>MIT License</b> — Copyright (c) 2026 oboroge0（<a href="https://github.com/oboroge0/hayamimi">github.com/oboroge0/hayamimi</a>）。
+          セットアップ時に、動作確認済みの版（コミット <code>09c8081</code>）をダウンロードして使います。
+          hayamimi 自身のライセンス情報は <a href="https://github.com/oboroge0/hayamimi/blob/main/THIRD_PARTY_NOTICES.md">THIRD_PARTY_NOTICES.md</a> にまとめられています。</p>
+
+        <h2>アプリに同梱しているもの</h2>
+        <table>
+          <tr><th>ソフトウェア</th><th>ライセンス</th><th>備考</th></tr>
+          <tr><td><a href="https://www.electronjs.org/">Electron</a></td><td>MIT</td><td>Chromium（BSD 系）・Node.js（MIT）などを含みます。ライセンス全文はインストール先の LICENSE.electron.txt・LICENSES.chromium.html にあります</td></tr>
+          <tr><td><a href="https://ffmpeg.org/">FFmpeg</a></td><td><b>GPL-3.0-or-later</b></td><td>ファイル文字起こしでの音声変換に使用。<a href="https://github.com/eugeneware/ffmpeg-static">ffmpeg-static</a>（b6.1.1）のビルドを無改変で同梱しています。ソースコードは <a href="https://ffmpeg.org/download.html">ffmpeg.org</a> から入手できます。ライセンス全文はインストール先の resources\app.asar.unpacked\node_modules\ffmpeg-static\ffmpeg-win32-x64.LICENSE にあります</td></tr>
+        </table>
+
+        <h2>セットアップ時にダウンロードするもの</h2>
+        <p>次のものは、アプリには含まれず、セットアップ時に各配布元からダウンロードされます。</p>
+        <table>
+          <tr><th>ソフトウェア</th><th>ライセンス</th><th>備考</th></tr>
+          <tr><td><a href="https://github.com/astral-sh/uv">uv</a></td><td>MIT または Apache-2.0</td><td>Astral。Python とライブラリの導入に使用（0.13.0 に固定）</td></tr>
+          <tr><td><a href="https://www.python.org/">Python</a></td><td>PSF License</td><td>3.11 系。<a href="https://github.com/astral-sh/python-build-standalone">python-build-standalone</a> のビルドを使用</td></tr>
+        </table>
+
+        <h3>Python ライブラリ</h3>
+        <table>
+          <tr><th>ライブラリ</th><th>ライセンス</th></tr>
+          <tr><td><a href="https://github.com/k2-fsa/sherpa-onnx">sherpa-onnx</a></td><td>Apache-2.0</td></tr><tr><td><a href="https://github.com/microsoft/onnxruntime">onnxruntime</a></td><td>MIT</td></tr><tr><td><a href="https://github.com/OpenNMT/CTranslate2">CTranslate2</a></td><td>MIT</td></tr><tr><td><a href="https://github.com/google/sentencepiece">sentencepiece</a></td><td>Apache-2.0</td></tr><tr><td><a href="https://numpy.org/">NumPy</a></td><td>BSD-3-Clause</td></tr><tr><td><a href="https://github.com/bastibe/python-soundfile">soundfile</a></td><td>BSD-3-Clause</td></tr><tr><td><a href="https://github.com/spatialaudio/python-sounddevice">sounddevice</a></td><td>MIT</td></tr><tr><td><a href="https://github.com/bastibe/SoundCard">SoundCard</a></td><td>BSD-3-Clause</td></tr><tr><td><a href="https://github.com/polm/fugashi">fugashi</a></td><td>MIT（MeCab は BSD / GPL / LGPL の三重ライセンス）</td></tr><tr><td><a href="https://github.com/polm/unidic-lite">unidic-lite</a></td><td>MIT（辞書データは修正 BSD）</td></tr><tr><td><a href="https://github.com/giampaolo/psutil">psutil</a></td><td>BSD-3-Clause</td></tr><tr><td><a href="https://github.com/huggingface/huggingface_hub">huggingface_hub</a></td><td>Apache-2.0</td></tr>
+        </table>
+
+        <h3>モデル</h3>
+        <p>「最小構成」では日本語に必要なモデルだけを、「すべて」では翻訳・多言語・話者分離のモデルもダウンロードします。</p>
+        <table>
+          <tr><th>モデル</th><th>提供元</th><th>ライセンス</th></tr>
+          <tr><td><a href="https://huggingface.co/reazon-research/reazonspeech-k2-v2">ReazonSpeech k2 Zipformer（日本語）</a></td><td>Reazon Human Interaction Lab</td><td>Apache-2.0</td></tr><tr><td><a href="https://github.com/snakers4/silero-vad">Silero VAD（発話区間の検出）</a></td><td>Silero Team</td><td>MIT</td></tr><tr><td><a href="https://github.com/openai/whisper">Whisper tiny（言語の判定）</a></td><td>OpenAI</td><td>MIT</td></tr><tr><td><a href="https://huggingface.co/ishiki-emo/mojicast-punct-onnx">日本語句読点モデル（mojicast-punct-onnx）</a></td><td>東北大学 NLP / bobfromjapan / Mojicast</td><td>Apache-2.0</td></tr><tr><td><a href="https://github.com/modelscope/3D-Speaker">CAM++（話者の埋め込み）</a></td><td>Alibaba DAMO Academy / 3D-Speaker</td><td>Apache-2.0</td></tr><tr><td><a href="https://github.com/pyannote/pyannote-audio">pyannote segmentation-3.0（話者の切り替わり検出）</a></td><td>pyannote</td><td>MIT</td></tr><tr><td><a href="https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3">Parakeet TDT 0.6B（英語・欧州言語）</a></td><td>NVIDIA</td><td>CC-BY-4.0</td></tr><tr><td><a href="https://github.com/FunAudioLLM/SenseVoice">SenseVoice small / Paraformer-zh（中国語・韓国語・広東語）</a></td><td>Alibaba / FunAudioLLM / FunASR</td><td>Apache-2.0（SenseVoice の重みは FunASR Model License、帰属表示で商用可）</td></tr><tr><td><a href="https://github.com/facebookresearch/omnilingual-asr">Omnilingual ASR 300M（約 1600 言語の受け皿）</a></td><td>Meta AI</td><td>Apache-2.0</td></tr><tr><td><a href="https://huggingface.co/ishiki-emo/mojicast-m2m100-ct2">M2M-100 418M（日→中・韓の翻訳）</a></td><td>Meta AI / Mojicast</td><td>MIT</td></tr><tr><td><a href="https://huggingface.co/staka/fugumt-ja-en">FuguMT（日→英の翻訳）</a></td><td>staka / Mojicast</td><td><b>CC BY-SA 4.0（継承）</b></td></tr>
+        </table>
+        <p class="hint">日→英翻訳の FuguMT だけは CC BY-SA 4.0（継承）です。モデルの重みそのものを再配布する場合は、
+          クレジット表示と同じライセンスでの公開が必要です（HayamimiWrapper はモデルを再配布せず、利用者の PC へ直接ダウンロードします）。</p>
+      </article>
+    </section>
+
+    <!-- 謝辞 -->
+    <section class="page" id="page-thanks">
+      <article class="card guide thanks">
+        <h1>謝辞</h1>
+
+        <div class="thanks-hero">
+          <p class="thanks-lead">オープンソースの音声認識エンジン <b>hayamimi（早耳）</b> を開発・公開されている
+            <a href="https://github.com/oboroge0">oboroge0</a> 氏に、深く感謝申し上げます。</p>
+          <p>本アプリの文字起こし機能は、すべて hayamimi によって実現されています。
+            GPU を必要とせず、音声を外部に送信することなく、高い精度で日本語を文字起こしできる技術を
+            MIT ライセンスで公開いただいたことにより、本アプリの開発が可能となりました。</p>
+          <p>本アプリは、hayamimi をより多くの方に手軽にご利用いただくための導入支援・操作画面を提供するものです。
+            hayamimi の開発と継続的な改善に、改めて御礼申し上げます。</p>
+          <p class="thanks-link"><a href="https://github.com/oboroge0/hayamimi">github.com/oboroge0/hayamimi</a></p>
+        </div>
+
+        <h2>関連プロジェクト</h2>
+        <p>hayamimi および本アプリは、以下のオープンソースプロジェクト・モデルを利用しています。各プロジェクトの開発者の皆様に感謝申し上げます。</p>
+        <ul>
+          <li><a href="https://github.com/k2-fsa/sherpa-onnx">k2-fsa / sherpa-onnx</a> — すべてのモデルを動かしている推論エンジン</li>
+          <li><a href="https://research.reazon.jp/">ReazonSpeech</a>（Reazon Human Interaction Lab）— 日本語認識の主力モデルと大規模な日本語音声コーパス</li>
+          <li><a href="https://github.com/snakers4/silero-vad">Silero VAD</a> — 発話区間の検出</li>
+          <li><a href="https://github.com/modelscope/3D-Speaker">3D-Speaker</a>（Alibaba DAMO Academy）・<a href="https://github.com/pyannote/pyannote-audio">pyannote</a> — 話者の聞き分け</li>
+          <li><a href="https://github.com/ishiki-emo/mojicast">Mojicast</a>（ishiki-emo）— 句読点・翻訳モデルの変換版と、ライブ字幕の設計</li>
+          <li><a href="https://huggingface.co/tohoku-nlp">東北大学 NLP</a>・bobfromjapan — 日本語の句読点モデル</li>
+          <li><a href="https://huggingface.co/staka/fugumt-ja-en">FuguMT</a>（staka）・<a href="https://huggingface.co/facebook/m2m100_418M">M2M-100</a>（Meta AI）— 翻訳モデル</li>
+          <li><a href="https://github.com/FunAudioLLM/SenseVoice">FunASR / SenseVoice</a>・<a href="https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3">NVIDIA Parakeet</a>・<a href="https://github.com/facebookresearch/omnilingual-asr">Meta Omnilingual ASR</a> — 多言語の認識</li>
+          <li><a href="https://github.com/polm/fugashi">fugashi</a>・MeCab・UniDic — 日本語の形態素解析</li>
+          <li><a href="https://github.com/astral-sh/uv">uv</a>（Astral）— Python 環境の導入</li>
+          <li><a href="https://www.electronjs.org/">Electron</a>・<a href="https://ffmpeg.org/">FFmpeg</a> — アプリの土台と音声の変換</li>
+        </ul>
+
+        <h2>精度の調整に使った評価データ</h2>
+        <p>認識プロファイルの調整および動作確認に、以下の公開データセットを使用しました（データセットはアプリに含まれていません）。</p>
+        <ul>
+          <li><a href="https://huggingface.co/datasets/google/fleurs">FLEURS</a>（Google, CC BY 4.0）</li>
+          <li><a href="https://huggingface.co/datasets/reazon-research/reazonspeech">ReazonSpeech</a>（Reazon Human Interaction Lab）</li>
+          <li><a href="https://commonvoice.mozilla.org/">Common Voice</a>（Mozilla Foundation, CC0）</li>
+          <li><a href="https://sites.google.com/site/shinnosuketakamichi/research-topics/jvnv_corpus">JVNV コーパス</a>（東京大学 高道研究室, CC BY-SA 4.0）</li>
+        </ul>
+      </article>
+    </section>
+
+    <!-- ⑥ ログ -->
+    <section class="page" id="page-log">
+      <header class="page-head row">
+        <div>
+          <h1>ログ</h1>
+          <p class="lead">うまく動かないときは、ここの内容を確認してください。</p>
+        </div>
+        <button class="btn" id="btn-clear-log">クリア</button>
+      </header>
+      <div class="log-legend" aria-label="ログの色分け">
+        <span class="lg-app">アプリのメッセージ</span><span class="lg-warn">注意</span><span class="lg-err">エラー</span>
+        <span class="lg-final">速報</span><span class="lg-refine">清書</span><span class="lg-partial">聞き取り途中・hayamimi の内部の出力</span>
+      </div>
+      <pre class="log tall" id="engine-log"></pre>
+    </section>
+  </main>
+</div>
+
+<template id="tpl-transcript">
+  <div class="card transcript">
+    <div class="tabs">
+      <button class="tab active" data-tab="finals" title="話し終えるとすぐに表示される結果です">速報 <span class="count">0</span></button>
+      <button class="tab" data-tab="refined" title="前後の音声をまとめて認識し直した、より正確な結果です（数秒遅れて届きます）">清書（高精度） <span class="count">0</span></button>
+      <div class="spacer"></div>
+      <label class="check small-check" title="文字起こし結果に時刻を表示し、コピー・保存にも含めます"><input type="checkbox" data-act="time" checked> 時刻</label>
+      <button class="btn small" data-act="copy">コピー</button>
+      <button class="btn small" data-act="save-txt">保存 (.txt)</button>
+      <button class="btn small" data-act="save-md">保存 (.md)</button>
+      <button class="btn small ghost" data-act="clear">クリア</button>
+    </div>
+    <p class="tab-help" data-help="finals"><b>速報</b>: 話し終えるとすぐに表示される一次結果です。話している間は、末尾に「聞き取り中」の仮の行が出ます。清書が終わると消えて「清書（高精度）」タブに移ります。速さ優先のため、誤字や話者の取り違えが残ることがあります。</p>
+    <p class="tab-help" data-help="refined" hidden><b>清書（高精度）</b>: 速報をもとに、前後の音声をまとめてもう一度認識し直した結果です。数秒〜十数秒遅れて届きますが、文章・句読点・話者の区別がより正確です。保存するならこちらがおすすめです。</p>
+    <div class="lines" data-list="finals"><div class="empty">ここに速報が表示されます（清書が終わった発言は消え、「清書（高精度）」タブに移ります）</div></div>
+    <div class="lines" data-list="refined" hidden><div class="empty">清書（高精度）がここに表示されます（速報より少し遅れて届きます）</div></div>
+  </div>
+</template>
+
+<div class="toasts" id="toasts"></div>
+
+<script src="../shared/timefmt.js"></script>
+<script src="../shared/profiles.js"></script>
+<script src="transcriptView.js"></script>
+<script src="refineChart.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,75 @@
+{
+  "name": "hayamimiwrapper",
+  "version": "0.0.1",
+  "description": "hayamimi を使った Windows 用文字起こしアプリ（導入支援つき）",
+  "main": "src/main/main.js",
+  "author": "tomoaki bessho",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "check": "node scripts/check-syntax.js",
+    "prepare:win": "node scripts/fetch-ffmpeg-win.js",
+    "build": "npm run check && npm run prepare:win && electron-builder --win --x64 --dir",
+    "dist": "npm run check && npm run prepare:win && electron-builder --win --x64",
+    "icon": "electron scripts/make-icon.js",
+    "test": "node --test \"test/**/*.test.js\""
+  },
+  "dependencies": {
+    "ffmpeg-static": "^5.3.0"
+  },
+  "devDependencies": {
+    "electron": "^44.7.0",
+    "electron-builder": "^26.15.3"
+  },
+  "allowScripts": {
+    "ffmpeg-static@5.3.0": true,
+    "electron-winstaller@5.4.0": true
+  },
+  "build": {
+    "appId": "com.tomoaki.hayamimiwrapper",
+    "productName": "HayamimiWrapper",
+    "executableName": "HayamimiWrapper",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "src/**/*",
+      "build/icon.png",
+      "package.json",
+      "!node_modules/ffmpeg-static/ffmpeg"
+    ],
+    "asarUnpack": [
+      "node_modules/ffmpeg-static/**"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "artifactName": "HayamimiWrapper-Setup-${version}.${ext}",
+      "shortcutName": "HayamimiWrapper",
+      "createDesktopShortcut": true
+    },
+    "portable": {
+      "artifactName": "HayamimiWrapper-${version}-portable.${ext}"
+    }
+  }
+}
